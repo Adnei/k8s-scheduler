@@ -19,11 +19,27 @@ type NodeList struct {
 
 type Node struct {
 	Metadata Metadata `json:"metadata"`
+	Status   Status `json:"status"`
 }
 
 type Metadata struct {
 	Name        string            `json:"name,omitempty"`
 	Annotations map[string]string `json:"annotations"`
+}
+
+type Status struct {
+	MaxCapacity Capacity `json:"capacity"`
+	Allocatable Capacity `json:"allocatable"`
+}
+
+
+// EphemeralStorage stores a big number. We decode it as string for now...
+// Memory stores a big number. We decode it as string for now...
+type Capacity struct {
+	CPU int `json:"cpu"`
+	EphemeralStorage string `json:"ephemeral-storage"`
+	Memory string `"json:"memory"`
+	Pods int `json:"pods"`
 }
 
 func main() {
