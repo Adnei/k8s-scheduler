@@ -59,7 +59,23 @@ func main() {
 
 	rand.Seed(time.Now().Unix())
 	for _, node := range nodes.Items {
-		price := prices[rand.Intn(len(prices))]
+		// @TODO: 
+		//   Request metrics
+		//   To calculate price based on metrics
+		//
+		
+		resp, err := http.Get("http://127.0.0.1:8001/api/v1/nodes/"+node.Metadata.Name+"/proxy/stats/summary")
+		if err != nil {                                            	
+        		fmt.Println(err)
+        		os.Exit(1)
+        	}
+        	if resp.StatusCode != 200 {
+        		fmt.Println("Invalid status code", resp.Status)
+        		os.Exit(1)
+		}
+
+
+		price := prices[rand.Intn(len(prices))] 
 		annotations := map[string]string{
 			"hightower.com/cost": price,
 		}
@@ -97,5 +113,6 @@ func main() {
 			os.Exit(1)
 		}
 		fmt.Printf("%s %s\n", node.Metadata.Name, price)
+
 	}
 }
