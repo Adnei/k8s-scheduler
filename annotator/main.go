@@ -36,10 +36,10 @@ type Status struct {
 // EphemeralStorage stores a big number. We decode it as string for now...
 // Memory stores a big number. We decode it as string for now...
 type Capacity struct {
-	CPU int `json:"cpu"`
+	CPU string `json:"cpu"`
 	EphemeralStorage string `json:"ephemeral-storage"`
 	Memory string `"json:"memory"`
-	Pods int `json:"pods"`
+	Pods string `json:"pods"`
 }
 
 func main() {
@@ -80,24 +80,17 @@ func main() {
 		//   To calculate price based on metrics
 		//
 		
-		resp, err := http.Get("http://127.0.0.1:8001/api/v1/nodes/"+node.Metadata.Name+"/proxy/stats/summary")
-		if err != nil {                                            	
-        		fmt.Println(err)
-        		os.Exit(1)
-        	}
-        	if resp.StatusCode != 200 {
-        		fmt.Println("Invalid status code", resp.Status)
-        		os.Exit(1)
-		}
-
-
 		price := prices[rand.Intn(len(prices))] 
 		annotations := map[string]string{
 			"hightower.com/cost": price,
 		}
 		patch := Node{
 			Metadata{
-				Annotations: annotations,
+				Annotations: annotations,	
+			},
+			Status{
+				MaxCapacity: node.Status.MaxCapacity,
+				Allocatable: node.Status.Allocatable,
 			},
 		}
 
@@ -129,6 +122,7 @@ func main() {
 			os.Exit(1)
 		}
 		fmt.Printf("%s %s\n", node.Metadata.Name, price)
-
+		fmt.Println(node.Status.Allocatable)
+		fmt.Println(node.Status.MaxCapacity)
 	}
 }
