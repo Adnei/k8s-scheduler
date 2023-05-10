@@ -18,8 +18,9 @@ type NodeList struct {
 }
 
 type Node struct {
-	Metadata Metadata `json:"metadata"`
-	Status   Status `json:"status"`
+	Metadata   Metadata    `json:"metadata"`
+	Status     Status      `json:"status"`
+	Conditions []Condition `json:"conditions"`
 }
 
 type Metadata struct {
@@ -38,8 +39,13 @@ type Status struct {
 type Capacity struct {
 	CPU string `json:"cpu"`
 	EphemeralStorage string `json:"ephemeral-storage"`
-	Memory string `"json:"memory"`
+	Memory string `json:"memory"`
 	Pods string `json:"pods"`
+}
+
+type Condition struct{
+	Type    string `json:"type"`
+	Status  string `json:"status"`
 }
 
 func main() {
@@ -84,6 +90,8 @@ func main() {
 		annotations := map[string]string{
 			"hightower.com/cost": price,
 		}
+		// @TODO:
+		//       IDK the right way to fill the Conditions array. Maybe using map (somehow)???
 		patch := Node{
 			Metadata{
 				Annotations: annotations,	
@@ -91,6 +99,9 @@ func main() {
 			Status{
 				MaxCapacity: node.Status.MaxCapacity,
 				Allocatable: node.Status.Allocatable,
+			},
+			[]Condition{
+				
 			},
 		}
 
