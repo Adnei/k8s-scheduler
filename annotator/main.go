@@ -20,7 +20,6 @@ type NodeList struct {
 type Node struct {
 	Metadata   Metadata    `json:"metadata"`
 	Status     Status      `json:"status"`
-	Conditions []Condition `json:"conditions"`
 }
 
 type Metadata struct {
@@ -31,6 +30,7 @@ type Metadata struct {
 type Status struct {
 	MaxCapacity Capacity `json:"capacity"`
 	Allocatable Capacity `json:"allocatable"`
+	Conditions []Condition `json:"conditions"`
 }
 
 
@@ -112,7 +112,7 @@ func main() {
 		price := prices[rand.Intn(len(prices))]
 			
 		for _, expected := range expectedConditions {
-			for _, nodeCondition := range node.Conditions {
+			for _, nodeCondition := range node.Status.Conditions{
 				if expected.Type == nodeCondition.Type {
 					if expected.Status != nodeCondition.Status {
 						price = "999.99"
@@ -133,12 +133,9 @@ func main() {
 			Status{
 				MaxCapacity: node.Status.MaxCapacity,
 				Allocatable: node.Status.Allocatable,
-			},
-			[]Condition{
-				// I have no idea how to fill this D:	
+				Conditions:  node.Status.Conditions,
 			},
 		}
-
 		var b []byte
 		body := bytes.NewBuffer(b)
 		err := json.NewEncoder(body).Encode(patch)
