@@ -52,6 +52,29 @@ func main() {
 	flag.BoolVar(&listOnly, "l", false, "List current annotations and exist")
 	flag.Parse()
 
+	expectedConditions := []Condition{
+		{
+			Type : "NetworkUnavailable",
+			Status : "False",
+		},
+		{
+			Type : "MemoryPressure",
+			Status : "False",
+		},
+		{
+			Type : "DiskPressure",
+			Status : "False",
+		},
+		{
+			Type : "PIDPressure",
+			Status : "False",
+		},
+		{
+			Type : "Ready",
+			Status : "True",
+		},
+	}
+
 	prices := []string{"0.05", "0.10", "0.20", "0.40", "0.80", "1.60"}
 	resp, err := http.Get("http://127.0.0.1:8001/api/v1/nodes")
 	if err != nil {
@@ -86,7 +109,18 @@ func main() {
 		//   To calculate price based on metrics
 		//
 		
-		price := prices[rand.Intn(len(prices))] 
+		price := prices[rand.Intn(len(prices))]
+			
+		for _, expected := range expectedConditions {
+			for _, nodeCondition := range node.Conditions {
+				if expected.Type == nodeCondition.Type {
+					if expected.Status != nodeCondition.Status {
+						price = "999.99"
+					}
+				}
+			}
+		}
+
 		annotations := map[string]string{
 			"hightower.com/cost": price,
 		}
@@ -101,7 +135,7 @@ func main() {
 				Allocatable: node.Status.Allocatable,
 			},
 			[]Condition{
-				
+				// I have no idea how to fill this D:	
 			},
 		}
 
