@@ -107,10 +107,24 @@ func main() {
 		// @TODO: 
 		//   Request metrics
 		//   To calculate price based on metrics
-		//
-		
+		//   Get metrics from --> http://localhost:8001/api/v1/nodes/<node_name>/proxy/stats/summary
 		price := prices[rand.Intn(len(prices))]
-			
+		// price := "0.00"
+		
+		getResp, getErr := http.Get("http://127.0.0.1:8001/api/v1/nodes/" + node.Metadata.Name + "/proxy/stats/summary")
+		if getErr != nil {
+			fmt.Println(getErr)
+			os.Exit(1)
+		}
+		if getResp.StatusCode != 200 {
+			fmt.Println("Invalid status code", getResp.Status)
+			os.Exit(1)
+		}
+
+		// @TODO: 
+		//        To make structs and decoder
+
+		// This is not O(n^2) 
 		for _, expected := range expectedConditions {
 			for _, nodeCondition := range node.Status.Conditions{
 				if expected.Type == nodeCondition.Type {
@@ -124,8 +138,6 @@ func main() {
 		annotations := map[string]string{
 			"hightower.com/cost": price,
 		}
-		// @TODO:
-		//       IDK the right way to fill the Conditions array. Maybe using map (somehow)???
 		patch := Node{
 			Metadata{
 				Annotations: annotations,	
