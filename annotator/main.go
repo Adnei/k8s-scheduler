@@ -43,12 +43,33 @@ type Capacity struct {
 	Pods string `json:"pods"`
 }
 
-type Condition struct{
+type Condition struct {
 	Type    string `json:"type"`
 	Status  string `json:"status"`
 }
 
+type CPUUsage struct {
+	Timestamp string `json:"time"`
+	UsageNanoCores uint64 `json:"usageNanoCores"`
+	UsageCoreNanoSeconds uint64 `json:"usageCoreNanoSeconds"`
+}
+
+type MemoryUsage struct {
+	Timestamp	string		`json:"time"`
+	AvailableBytes	uint64		`json:"availableBytes"`
+	UsageBytes	uint64		`json:"usageBytes"`
+	// TODO: Page Faults, maybe???
+}
+
+type NodeMetric struct {
+	NodeName string		`json:"nodeName"`
+	CPU	 CPUUsage	`json:"cpu"`
+	Memory   MemoryUsage	`json:"memory"`
+	// TODO: Disk, number of pods, and Network
+}
+
 func main() {
+	const nanoCoreToCore = 1e9
 	flag.BoolVar(&listOnly, "l", false, "List current annotations and exist")
 	flag.Parse()
 
@@ -104,6 +125,8 @@ func main() {
 
 	rand.Seed(time.Now().Unix())
 	for _, node := range nodes.Items {
+		fmt.Println("Iterating over node", node.Metadata.Name)
+
 		// @TODO: 
 		//   Request metrics
 		//   To calculate price based on metrics
@@ -111,20 +134,10 @@ func main() {
 		price := prices[rand.Intn(len(prices))]
 		// price := "0.00"
 		
-		getResp, getErr := http.Get("http://127.0.0.1:8001/api/v1/nodes/" + node.Metadata.Name + "/proxy/stats/summary")
-		if getErr != nil {
-			fmt.Println(getErr)
-			os.Exit(1)
-		}
-		if getResp.StatusCode != 200 {
-			fmt.Println("Invalid status code", getResp.Status)
-			os.Exit(1)
-		}
-
 		// @TODO: 
 		//        To make structs and decoder
 
-		// This is not O(n^2) 
+		// This is NOT O(n^2) 
 		for _, expected := range expectedConditions {
 			for _, nodeCondition := range node.Status.Conditions{
 				if expected.Type == nodeCondition.Type {
@@ -133,6 +146,28 @@ func main() {
 					}
 				}
 			}
+		}
+		fmt.Println("Current Price:", price)	
+		if price != "999.99"{
+			getResp, getErr := http.Get("http://127.0.0.1:8001/api/v1/nodes/" + node.Metadata.Name + "/proxy/stats/summary")
+			if getErr != nil {
+				fmt.Println("Error: \n", getErr)
+				os.Exit(1)
+			}
+			if getResp.StatusCode != 200 {
+				fmt.Println("Invalid status code", getResp.Status)
+				os.Exit(1)
+			}
+			var nodeMetrics NodeMetric
+			decoder := json.NewDecoder(resp.Body)
+			err = decoder.Decode(&nodeMetrics)
+			if err != nil {
+				fmt.Println("Error: \n", err)
+				os.Exit(1)
+			}
+		
+			fmt.Println(nodeMetrics.CPU)
+			fmt.Println(nodeMetrics.Memory)
 		}
 
 		annotations := map[string]string{
