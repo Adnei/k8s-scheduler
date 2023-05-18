@@ -61,6 +61,11 @@ type MemoryUsage struct {
 	// TODO: Page Faults, maybe???
 }
 
+type MetricObj struct {
+	Node NodeMetric `json:"node"`
+	// TODO: Pods (list of pods that the node is hosting)
+}
+
 type NodeMetric struct {
 	NodeName string		`json:"nodeName"`
 	CPU	 CPUUsage	`json:"cpu"`
@@ -151,23 +156,23 @@ func main() {
 		if price != "999.99"{
 			getResp, getErr := http.Get("http://127.0.0.1:8001/api/v1/nodes/" + node.Metadata.Name + "/proxy/stats/summary")
 			if getErr != nil {
-				fmt.Println("Error: \n", getErr)
+				fmt.Println("Request Error: \n", getErr)
 				os.Exit(1)
 			}
 			if getResp.StatusCode != 200 {
 				fmt.Println("Invalid status code", getResp.Status)
 				os.Exit(1)
 			}
-			var nodeMetrics NodeMetric
-			decoder := json.NewDecoder(resp.Body)
-			err = decoder.Decode(&nodeMetrics)
-			if err != nil {
-				fmt.Println("Error: \n", err)
+			var nodeMetrics MetricObj
+			metricDecoder := json.NewDecoder(getResp.Body)
+			metricErr := metricDecoder.Decode(&nodeMetrics)
+			if metricErr != nil {
+				fmt.Println("Metric Decoder Error: \n", metricErr)
 				os.Exit(1)
 			}
 		
-			fmt.Println(nodeMetrics.CPU)
-			fmt.Println(nodeMetrics.Memory)
+			fmt.Println(nodeMetrics.Node.CPU)
+			fmt.Println(nodeMetrics.Node.Memory)
 		}
 
 		annotations := map[string]string{
