@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"strconv"
 )
 
 var listOnly bool
@@ -74,7 +75,7 @@ type NodeMetric struct {
 }
 
 func main() {
-	const nanoCoreToCore = 1e9
+	const nanoCoreToCore float64 = 1e9
 	flag.BoolVar(&listOnly, "l", false, "List current annotations and exist")
 	flag.Parse()
 
@@ -172,7 +173,20 @@ func main() {
 			}
 		
 			fmt.Println(nodeMetrics.Node.CPU)
-			fmt.Println(nodeMetrics.Node.Memory)
+			fmt.Println(node.Status.MaxCapacity.CPU)
+			
+			cpuN, castErr := strconv.ParseFloat(node.Status.MaxCapacity.CPU, 2)
+			if castErr != nil {
+				fmt.Println("Error casting number of CPUs")
+				os.Exit(1)
+			}
+			
+			usage := (float64(nodeMetrics.Node.CPU.UsageNanoCores) / nanoCoreToCore) / cpuN * float64(100)
+			fmt.Println("Usage:", usage)	
+
+			// fmt.Println(nodeMetrics.Node.Memory)
+
+			
 		}
 
 		annotations := map[string]string{
